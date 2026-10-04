@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>Tercera Ley de Kepler — Taller de Astrofísica</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --muted: #555;
+    --card: #f7f7f7;
+    --border: #ddd;
+    --accent: #1a6b3c;
+    --accent-light: #e6f2ea;
+    --danger: #b33;
+    --warn-bg: #fff8e0;
+    --warn-border: #e0c060;
+    --input-bg: #fff;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111;
+      --text: #e8e8e8;
+      --muted: #aaa;
+      --card: #1c1c1c;
+      --border: #333;
+      --accent: #4ac97e;
+      --accent-light: #1a2e22;
+      --danger: #f66;
+      --warn-bg: #2a2210;
+      --warn-border: #8a7a30;
+      --input-bg: #1c1c1c;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 17px; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 12px;
+    max-width: 640px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+  h1 { font-size: 1.35rem; margin-bottom: 4px; line-height: 1.25; }
+  h2 { font-size: 1.1rem; margin: 20px 0 8px; }
+  h3 { font-size: 0.95rem; margin: 12px 0 6px; color: var(--muted); font-weight: 600; }
+  p { margin-bottom: 8px; }
+  .subtitle { font-size: 0.85rem; color: var(--muted); margin-bottom: 14px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  select, input[type="number"], input[type="text"] {
+    font-size: 1rem;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    width: 100%;
+  }
+  select { margin-top: 6px; }
+
+  button {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active { opacity: 0.7; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; color: var(--muted); font-size: 0.8rem; }
+  td input {
+    width: 100%;
+    padding: 6px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+  }
+  td input:focus { border-color: var(--accent); background: var(--input-bg); }
+  .btn-del {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    color: var(--danger);
+    border-color: var(--danger);
+    background: transparent;
+  }
+
+  .slope-box {
+    background: var(--accent-light);
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    margin: 12px 0;
+  }
+  .slope-box .value { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+  .slope-box .label { font-size: 0.8rem; color: var(--muted); }
+  .slope-box .detail { font-size: 0.85rem; margin-top: 4px; }
+
+  .stats { font-size: 0.85rem; line-height: 1.6; }
+  .stats span { font-weight: 600; }
+
+  .graph-container {
+    width: 100%;
+    overflow: hidden;
+    margin: 6px 0;
+  }
+  svg { display: block; width: 100%; height: auto; }
+
+  .hint { font-size: 0.8rem; color: var(--muted); font-style: italic; margin-top: 4px; }
+
+  details { margin-top: 8px; }
+  details summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+  }
+  details[open] summary { margin-bottom: 6px; }
+  details p, details div { font-size: 0.85rem; }
+
+  .msg { font-size: 0.85rem; padding: 8px 10px; border-radius: 6px; margin: 8px 0; }
+  .msg.error { background: var(--warn-bg); border: 1px solid var(--warn-border); }
+  .msg.ok { background: var(--accent-light); border: 1px solid var(--accent); }
+
+  .warn-box {
+    background: var(--warn-bg);
+    border-left: 3px solid var(--warn-border);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    margin-top: 8px;
+  }
+
+  footer {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--accent); }
+
+  .pred-result {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--accent-light);
+    border-radius: 6px;
+    text-align: center;
+  }
+
+  @media (max-width: 380px) {
+    html { font-size: 15px; }
+    .slope-box .value { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Tercera Ley de Kepler</h1>
+<p class="subtitle">Taller de astrofísica — comprueba la relación entre el tamaño de la órbita y el tiempo que tarda en completarse.</p>
+
+<!-- ========== SELECTOR ========== -->
+<div class="card">
+  <label for="dataset"><strong>Conjunto de datos</strong></label>
+  <select id="dataset" onchange="loadDataset(this.value)">
+    <option value="solar">Sistema Solar</option>
+    <option value="jupiter">Lunas de Júpiter</option>
+    <option value="trappist">TRAPPIST-1</option>
+    <option value="custom">Mis datos</option>
+  </select>
+  <p class="hint" id="units-label" style="margin-top:6px;"></p>
+</div>
+
+<!-- ========== TABLA ========== -->
+<div class="card">
+  <h2>Datos</h2>
+  <p style="font-size:0.85rem;margin-bottom:8px;">Puedes editar los valores directamente. La gráfica se actualiza al instante.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30%;">Nombre</th>
+        <th style="width:30%;" id="th-a">a</th>
+        <th style="width:30%;" id="th-t">T</th>
+        <th style="width:10%;"></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <div class="btn-row">
+    <button onclick="addRow()">Añadir fila</button>
+    <button onclick="clearCustom()">Borrar todo</button>
+  </div>
+
+  <div id="table-msg"></div>
+
+  <details>
+    <summary>¿Qué significan a y T?</summary>
+    <p><strong>a</strong> es el tamaño de la órbita (la distancia media al cuerpo central). <strong>T</strong> es el tiempo que tarda en dar una vuelta completa.</p>
+  </details>
+</div>
+
+<!-- ========== RESULTADO PENDIENTE ========== -->
+<div class="card">
+  <h2>Ajuste de la ley de Kepler</h2>
+
+  <div class="slope-box" id="slope-box">
+    <div class="label">Pendiente (exponente de la ley T proporcional a a^pendiente)</div>
+    <div class="value" id="slope-value">—</div>
+    <div class="detail" id="slope-unc">—</div>
+  </div>
+
+  <div class="stats" id="stats">
+    <p>Ordenada en el origen: <span id="intercept">—</span></p>
+    <p>R² (bondad del ajuste log-log): <span id="r2">—</span></p>
+  </div>
+
+  <p class="hint" id="slope-hint">La pendiente es el exponente de la relación T proporcional a a^pendiente. Para el Sistema Solar debe dar aproximadamente 1,50.</p>
+
+  <div id="fit-msg"></div>
+
+  <details>
+    <summary>¿Qué significa la pendiente?</summary>
+    <div>
+      <p>Si la pendiente es <strong>1,5</strong>, significa que T crece como a elevado a 1,5. Eso es exactamente <strong>T² proporcional a a³</strong>, que es la Tercera Ley de Kepler.</p>
+      <p>La ordenada nos dice cuánto vale T cuando a = 1 (en las unidades elegidas). Para el Sistema Solar con a en UA y T en años, la ordenada debe ser cercana a 0 en escala logarítmica (log base 10 de 1 es 0).</p>
+      <p>R² mide qué tan bien se alinean los puntos en la gráfica log-log. Si R² es cercano a 1, el ajuste es muy bueno.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ========== GRÁFICA 1: LINEAL ========== -->
+<div class="card">
+  <h2>Gráfica 1: T contra a (escala lineal)</h2>
+  <div class="graph-container">
+    <svg id="svg-linear" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="hint">Observa que la curva no es una recta: T crece más rápido que a. La línea de puntos es el ajuste de Kepler según tus datos.</p>
+</div>
+
+<!-- ========== GRÁFICA 2: LOG-LOG ========== -->
+<div class="card">
+  <h2>Gráfica 2: log(T) contra log(a)</h2>
+  <div class="graph-container">
+    <svg id="svg-loglog" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="hint">En esta escala, la relación debería verse como una línea recta. La recta roja es la regresión por mínimos cuadrados. El R² se muestra arriba a la izquierda.</p>
+</div>
+
+<!-- ========== GRÁFICA 3: T² vs a³ ========== -->
+<div class="card">
+  <h2>Gráfica 3: T² contra a³</h2>
+  <p style="font-size:0.85rem;margin-bottom:6px;">Si la Tercera Ley se cumple, aquí debería verse una línea recta que pasa por el origen, con pendiente aproximadamente 1.</p>
+  <div class="graph-container">
+    <svg id="svg-t2a3" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <p class="hint" id="t2a3-hint">La recta gris es la referencia de pendiente 1.</p>
+</div>
+
+<!-- ========== PREDICCIÓN ========== -->
+<div class="card">
+  <h2>Predicción</h2>
+  <p style="font-size:0.85rem;">Introduce un valor de <strong>a</strong> y calcularemos <strong>T</strong> usando el ajuste actual.</p>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+    <input type="number" id="pred-a" placeholder="Valor de a" step="any" style="flex:1;">
+    <button class="primary" onclick="doPredict()">Calcular T</button>
+  </div>
+  <div id="pred-result"></div>
+
+  <details>
+    <summary>¿Cómo funciona la predicción?</summary>
+    <p>Usamos la recta ajustada en el espacio log-log: log(T) = pendiente × log(a) + ordenada. Despejando: T = 10^(pendiente × log(a) + ordenada).</p>
+  </details>
+</div>
+
+<!-- ========== NOTA ESPECIAL JÚPITER ========== -->
+<div class="card" id="jupiter-note" style="display:none;">
+  <h2>Nota sobre las lunas de Júpiter</h2>
+  <div class="warn-box">
+    <p><strong>¿Por qué la pendiente sigue siendo aproximadamente 1,5 pero la ordenada cambia?</strong></p>
+    <p style="margin-top:6px;">La Tercera Ley de Kepler en su forma completa incluye la masa del cuerpo central: T² proporcional a a³ / (M + m). Como las lunas son mucho menos masivas que Júpiter, el exponente 1,5 no cambia.</p>
+    <p style="margin-top:6px;">Lo que sí cambia es la <strong>ordenada</strong>: al usar kilómetros y días en lugar de UA y años, el valor de T cuando a = 1 es distinto. Júpiter es mucho más masivo que el Sol en proporción a la escala de sus lunas, así que las lunas orbitan más rápido de lo que predeciría la fórmula calibrada para el Sistema Solar.</p>
+  </div>
+</div>
+
+<footer>
+  <p>Datos: Sistema Solar y lunas de Júpiter de fuentes astronómicas estándar. TRAPPIST-1 del NASA Exoplanet Archive (Agol et al. 2021).</p>
+  <p style="margin-top:4px;">Hecho para un taller de astrofísica — funciona sin internet después de cargar.</p>
+</footer>
+
+<script>
+// ============================================================
+// DATOS
+// ============================================================
+const DATASETS = {
+  solar: {
+    label: 'Sistema Solar',
+    aUnit: 'UA',
+    tUnit: 'años',
+    aLabel: 'a (UA)',
+    tLabel: 'T (años)',
+    rows: [
+      { name: 'Mercurio', a: 0.3871, t: 0.2408 },
+      { name: 'Venus', a: 0.7233, t: 0.6152 },
+      { name: 'Tierra', a: 1.0000, t: 1.0000 },
+      { name: 'Marte', a: 1.5237, t: 1.8808 },
+      { name: 'Júpiter', a: 5.2029, t: 11.862 },
+      { name: 'Saturno', a: 9.5367, t: 29.457 },
+      { name: 'Urano', a: 19.189, t: 84.011 },
+      { name: 'Neptuno', a: 30.070, t: 164.79 }
+    ]
+  },
+  jupiter: {
+    label: 'Lunas de Júpiter',
+    aUnit: 'km',
+    tUnit: 'días',
+    aLabel: 'a (km)',
+    tLabel: 'T (días)',
+    rows: [
+      { name: 'Io', a: 421700, t: 1.769 },
+      { name: 'Europa', a: 671034, t: 3.551 },
+      { name: 'Ganímedes', a: 1070412, t: 7.155 },
+      { name: 'Calisto', a: 1882709, t: 16.689 }
+    ]
+  },
+  trappist: {
+    label: 'TRAPPIST-1',
+    aUnit: 'UA',
+    tUnit: 'días',
+    aLabel: 'a (UA)',
+    tLabel: 'T (días)',
+    rows: [
+      { name: 'b', a: 0.01154, t: 1.511 },
+      { name: 'c', a: 0.01580, t: 2.422 },
+      { name: 'd', a: 0.02227, t: 4.050 },
+      { name: 'e', a: 0.02925, t: 6.099 },
+      { name: 'f', a: 0.03849, t: 9.206 },
+      { name: 'g', a: 0.04683, t: 12.354 },
+      { name: 'h', a: 0.06189, t: 18.767 }
+    ]
+  },
+  custom: {
+    label: 'Mis datos',
+    aUnit: 'unidades',
+    tUnit: 'unidades',
+    aLabel: 'a',
+    tLabel: 'T',
+    rows: []
+  }
+};
+
+let currentDataset = 'solar';
+let currentRows = [];
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+function loadDataset(key) {
+  currentDataset = key;
+  const ds = DATASETS[key];
+  currentRows = ds.rows.map(r => ({ ...r }));
+
+  document.getElementById('th-a').textContent = ds.aLabel;
+  document.getElementById('th-t').textContent = ds.tLabel;
+  document.getElementById('units-label').textContent =
+    `Unidades: a en ${ds.aUnit}, T en ${ds.tUnit}.`;
+
+  document.getElementById('jupiter-note').style.display =
+    (key === 'jupiter') ? 'block' : 'none';
+
+  renderTable();
+  updateAll();
+}
+
+// ============================================================
+// TABLA
+// ============================================================
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  currentRows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+
+    const tdName = document.createElement('td');
+    const inName = document.createElement('input');
+    inName.type = 'text';
+    inName.value = row.name || '';
+    inName.placeholder = 'Nombre';
+    inName.oninput = () => { currentRows[i].name = inName.value; };
+    tdName.appendChild(inName);
+
+    const tdA = document.createElement('td');
+    const inA = document.createElement('input');
+    inA.type = 'number';
+    inA.step = 'any';
+    inA.value = row.a;
+    inA.oninput = () => {
+      const v = parseFloat(inA.value);
+      currentRows[i].a = isNaN(v) ? null : v;
+      updateAll();
+    };
+    tdA.appendChild(inA);
+
+    const tdT = document.createElement('td');
+    const inT = document.createElement('input');
+    inT.type = 'number';
+    inT.step = 'any';
+    inT.value = row.t;
+    inT.oninput = () => {
+      const v = parseFloat(inT.value);
+      currentRows[i].t = isNaN(v) ? null : v;
+      updateAll();
+    };
+    tdT.appendChild(inT);
+
+    const tdDel = document.createElement('td');
+    const btnDel = document.createElement('button');
+    btnDel.className = 'btn-del';
+    btnDel.textContent = 'X';
+    btnDel.onclick = () => { currentRows.splice(i, 1); renderTable(); updateAll(); };
+    tdDel.appendChild(btnDel);
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdA);
+    tr.appendChild(tdT);
+    tr.appendChild(tdDel);
+    tbody.appendChild(tr);
+  });
+}
+
+function addRow() {
+  currentRows.push({ name: '', a: null, t: null });
+  renderTable();
+  updateAll();
+}
+
+function clearCustom() {
+  currentRows = [];
+  renderTable();
+  updateAll();
+}
+
+// ============================================================
+// VALIDACIÓN
+// ============================================================
+function getValidRows() {
+  return currentRows.filter(r =>
+    typeof r.a === 'number' && typeof r.t === 'number' &&
+    r.a > 0 && r.t > 0
+  );
+}
+
+function showTableMsg(html, type) {
+  document.getElementById('table-msg').innerHTML =
+    html ? `<div class="msg ${type}">${html}</div>` : '';
+}
+
+function showFitMsg(html, type) {
+  document.getElementById('fit-msg').innerHTML =
+    html ? `<div class="msg ${type}">${html}</div>` : '';
+}
+
+// ============================================================
+// AJUSTE LOG-LOG (única regresión)
+// ============================================================
+function fitLogLog() {
+  const rows = getValidRows();
+  const n = rows.length;
+  if (n < 2) return null;
+
+  const xs = rows.map(r => Math.log10(r.a));
+  const ys = rows.map(r => Math.log10(r.t));
+  const meanX = xs.reduce((s, v) => s + v, 0) / n;
+  const meanY = ys.reduce((s, v) => s + v, 0) / n;
+
+  let ssXX = 0, ssXY = 0, ssYY = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = xs[i] - meanX;
+    const dy = ys[i] - meanY;
+    ssXX += dx * dx;
+    ssXY += dx * dy;
+    ssYY += dy * dy;
+  }
+
+  const slope = ssXX === 0 ? 0 : ssXY / ssXX;
+  const intercept = meanY - slope * meanX;
+
+  let seSlope = 0;
+  let ssRes = 0;
+  for (let i = 0; i < n; i++) {
+    const pred = slope * xs[i] + intercept;
+    ssRes += (ys[i] - pred) ** 2;
+  }
+  if (n > 2 && ssXX > 0) {
+    const varRes = ssRes / (n - 2);
+    seSlope = Math.sqrt(varRes / ssXX);
+  }
+
+  let r2 = 0;
+  if (ssYY > 0) {
+    r2 = 1 - ssRes / ssYY;
+  }
+
+  return { slope, intercept, seSlope, r2, n, xs, ys };
+}
+
+// ============================================================
+// ACTUALIZAR TODO
+// ============================================================
+function updateAll() {
+  const rows = getValidRows();
+  const total = currentRows.length;
+  const n = rows.length;
+
+  if (total === 0) {
+    showTableMsg('No hay datos. Añade al menos 2 filas con valores positivos.', 'error');
+  } else if (n < 2) {
+    showTableMsg('Necesitas al menos 2 puntos con a > 0 y T > 0 para hacer el ajuste. Revisa los ceros o negativos.', 'error');
+  } else {
+    const invalid = currentRows.filter(r =>
+      (typeof r.a === 'number' && r.a <= 0) ||
+      (typeof r.t === 'number' && r.t <= 0)
+    );
+    if (invalid.length > 0) {
+      showTableMsg('Algunos valores son cero o negativos y no se usan en el ajuste.', 'error');
+    } else {
+      showTableMsg('', '');
+    }
+  }
+
+  const fit = fitLogLog();
+
+  if (fit && n >= 2) {
+    document.getElementById('slope-value').textContent = fit.slope.toFixed(3);
+    if (n > 2 && fit.seSlope > 0) {
+      document.getElementById('slope-unc').textContent =
+        `± ${fit.seSlope.toFixed(3)} (incertidumbre)`;
+    } else {
+      document.getElementById('slope-unc').textContent =
+        'No se puede calcular la incertidumbre con solo 2 puntos';
+    }
+    document.getElementById('intercept').textContent = fit.intercept.toFixed(4);
+    document.getElementById('r2').textContent = fit.r2.toFixed(4);
+  } else {
+    document.getElementById('slope-value').textContent = '—';
+    document.getElementById('slope-unc').textContent = '—';
+    document.getElementById('intercept').textContent = '—';
+    document.getElementById('r2').textContent = '—';
+  }
+
+  if (fit && n >= 2) {
+    const expected = 1.5;
+    const diff = Math.abs(fit.slope - expected);
+    if (diff < 0.05) {
+      showFitMsg('La pendiente es muy cercana al valor esperado de 1,50.', 'ok');
+    } else if (n === 2) {
+      showFitMsg('Con solo 2 puntos, la pendiente siempre será exacta por definición. Añade más datos para ver la tendencia real.', 'error');
+    } else {
+      showFitMsg('El valor esperado es aproximadamente 1,50. La diferencia puede deberse a las unidades o a que el conjunto no sigue exactamente la ley.', '');
+    }
+  } else {
+    showFitMsg('', '');
+  }
+
+  drawLinear(rows, fit);
+  drawLogLog(rows, fit);
+  drawT2vsA3(rows);
+}
+
+// ============================================================
+// GRÁFICA 1: LINEAL (con curva de ajuste, sin regresión propia)
+// ============================================================
+function drawLinear(rows, fit) {
+  const svg = document.getElementById('svg-linear');
+  const W = 400, H = 280;
+  const pad = { l: 55, r: 15, t: 25, b: 40 };
+  const pw = W - pad.l - pad.r;
+  const ph = H - pad.t - pad.b;
+
+  svg.innerHTML = '';
+
+  if (rows.length < 1) {
+    addText(svg, W/2, H/2, 'Sin datos', 'middle', '#888', '14px sans-serif');
+    return;
+  }
+
+  const aVals = rows.map(r => r.a);
+  const tVals = rows.map(r => r.t);
+  const aMax = Math.max(...aVals) * 1.08;
+  const tMax = Math.max(...tVals) * 1.08;
+
+  const xScale = a => pad.l + a / aMax * pw;
+  const yScale = t => pad.t + ph - t / tMax * ph;
+
+  addLine(svg, pad.l, pad.t, pad.l, pad.t + ph, '#888', 1);
+  addLine(svg, pad.l, pad.t + ph, pad.l + pw, pad.t + ph, '#888', 1);
+
+  // Curva de Kepler calculada a partir del ajuste log-log
+  if (fit && fit.n >= 2) {
+    const N = 80;
+    let d = '';
+    for (let i = 0; i <= N; i++) {
+      const a = aMax * i / N;
+      if (a <= 0) continue;
+      const t = 10 ** (fit.slope * Math.log10(a) + fit.intercept);
+      const x = xScale(a);
+      const y = yScale(t);
+      if (y < pad.t - 20 || y > pad.t + ph + 20) continue;
+      d += (d === '' ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
+    }
+    if (d) {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', '#e74c3c');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('stroke-dasharray', '5,4');
+      svg.appendChild(path);
+    }
+  }
+
+  rows.forEach(r => {
+    addCircle(svg, xScale(r.a), yScale(r.t), 4, '#2980b9');
+  });
+
+  const ds = DATASETS[currentDataset];
+  addText(svg, pad.l + pw/2, H - 6, ds.aLabel, 'middle', '#888', '12px sans-serif');
+  addText(svg, 12, pad.t + ph/2, ds.tLabel, 'middle', '#888', '12px sans-serif', -90);
+
+  for (let i = 0; i <= 4; i++) {
+    const aVal = aMax * i / 4;
+    addText(svg, xScale(aVal), pad.t + ph + 16, fmtNum(aVal), 'middle', '#666', '9px sans-serif');
+  }
+  for (let i = 0; i <= 4; i++) {
+    const tVal = tMax * i / 4;
+    addText(svg, pad.l - 6, yScale(tVal) + 3, fmtNum(tVal), 'end', '#666', '9px sans-serif');
+  }
+}
+
+// ============================================================
+// GRÁFICA 2: LOG-LOG (con la regresión)
+// ============================================================
+function drawLogLog(rows, fit) {
+  const svg = document.getElementById('svg-loglog');
+  const W = 400, H = 280;
+  const pad = { l: 55, r: 15, t: 25, b: 40 };
+  const pw = W - pad.l - pad.r;
+  const ph = H - pad.t - pad.b;
+
+  svg.innerHTML = '';
+
+  if (rows.length < 1) {
+    addText(svg, W/2, H/2, 'Sin datos', 'middle', '#888', '14px sans-serif');
+    return;
+  }
+
+  const xs = rows.map(r => Math.log10(r.a));
+  const ys = rows.map(r => Math.log10(r.t));
+
+  let xMin = Math.min(...xs), xMax = Math.max(...xs);
+  let yMin = Math.min(...ys), yMax = Math.max(...ys);
+
+  const xRange = xMax - xMin || 1;
+  const yRange = yMax - yMin || 1;
+  xMin -= xRange * 0.1; xMax += xRange * 0.1;
+  yMin -= yRange * 0.1; yMax += yRange * 0.1;
+
+  const xScale = v => pad.l + (v - xMin) / (xMax - xMin) * pw;
+  const yScale = v => pad.t + ph - (v - yMin) / (yMax - yMin) * ph;
+
+  addLine(svg, pad.l, pad.t, pad.l, pad.t + ph, '#888', 1);
+  addLine(svg, pad.l, pad.t + ph, pad.l + pw, pad.t + ph, '#888', 1);
+
+  // Regresión por mínimos cuadrados
+  if (fit && fit.n >= 2) {
+    const x1 = xMin, x2 = xMax;
+    const y1 = fit.slope * x1 + fit.intercept;
+    const y2 = fit.slope * x2 + fit.intercept;
+    addLine(svg, xScale(x1), yScale(y1), xScale(x2), yScale(y2), '#e74c3c', 2);
+
+    addText(svg, pad.l + 6, pad.t + 4, `R² = ${fit.r2.toFixed(4)}`, 'start', '#e74c3c', '11px sans-serif');
+    addText(svg, pad.l + 6, pad.t + 18, `pendiente = ${fit.slope.toFixed(3)}`, 'start', '#e74c3c', '11px sans-serif');
+  }
+
+  rows.forEach(r => {
+    addCircle(svg, xScale(Math.log10(r.a)), yScale(Math.log10(r.t)), 4, '#2980b9');
+  });
+
+  addText(svg, pad.l + pw/2, H - 6, 'log(a)', 'middle', '#888', '12px sans-serif');
+  addText(svg, 12, pad.t + ph/2, 'log(T)', 'middle', '#888', '12px sans-serif', -90);
+
+  for (let i = 0; i <= 4; i++) {
+    const v = xMin + (xMax - xMin) * i / 4;
+    addText(svg, xScale(v), pad.t + ph + 16, v.toFixed(1), 'middle', '#666', '9px sans-serif');
+  }
+  for (let i = 0; i <= 4; i++) {
+    const v = yMin + (yMax - yMin) * i / 4;
+    addText(svg, pad.l - 6, yScale(v) + 3, v.toFixed(1), 'end', '#666', '9px sans-serif');
+  }
+}
+
+// ============================================================
+// GRÁFICA 3: T² vs a³ (solo puntos y recta de referencia)
+// ============================================================
+function drawT2vsA3(rows) {
+  const svg = document.getElementById('svg-t2a3');
+  const W = 400, H = 280;
+  const pad = { l: 55, r: 15, t: 25, b: 40 };
+  const pw = W - pad.l - pad.r;
+  const ph = H - pad.t - pad.b;
+
+  svg.innerHTML = '';
+
+  if (rows.length < 1) {
+    addText(svg, W/2, H/2, 'Sin datos', 'middle', '#888', '14px sans-serif');
+    return;
+  }
+
+  const a3 = rows.map(r => r.a ** 3);
+  const t2 = rows.map(r => r.t ** 2);
+
+  const a3Max = Math.max(...a3) * 1.08;
+  const t2Max = Math.max(...t2) * 1.08;
+
+  const xScale = v => pad.l + v / a3Max * pw;
+  const yScale = v => pad.t + ph - v / t2Max * ph;
+
+  addLine(svg, pad.l, pad.t, pad.l, pad.t + ph, '#888', 1);
+  addLine(svg, pad.l, pad.t + ph, pad.l + pw, pad.t + ph, '#888', 1);
+
+  // Recta de referencia de pendiente 1 (gris discontinua)
+  const refSlope = t2Max / a3Max;
+  const refLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  refLine.setAttribute('x1', xScale(0));
+  refLine.setAttribute('y1', yScale(0));
+  refLine.setAttribute('x2', xScale(a3Max));
+  refLine.setAttribute('y2', yScale(a3Max * refSlope));
+  refLine.setAttribute('stroke', '#aaa');
+  refLine.setAttribute('stroke-width', '1.5');
+  refLine.setAttribute('stroke-dasharray', '4,4');
+  svg.appendChild(refLine);
+
+  rows.forEach(r => {
+    addCircle(svg, xScale(r.a ** 3), yScale(r.t ** 2), 4, '#27ae60');
+  });
+
+  addText(svg, pad.l + pw/2, H - 6, 'a³', 'middle', '#888', '12px sans-serif');
+  addText(svg, 12, pad.t + ph/2, 'T²', 'middle', '#888', '12px sans-serif', -90);
+
+  for (let i = 0; i <= 4; i++) {
+    const v = a3Max * i / 4;
+    addText(svg, xScale(v), pad.t + ph + 16, fmtNum(v), 'middle', '#666', '9px sans-serif');
+  }
+  for (let i = 0; i <= 4; i++) {
+    const v = t2Max * i / 4;
+    addText(svg, pad.l - 6, yScale(v) + 3, fmtNum(v), 'end', '#666', '9px sans-serif');
+  }
+}
+
+// ============================================================
+// PREDICCIÓN
+// ============================================================
+function doPredict() {
+  const el = document.getElementById('pred-result');
+  const fit = fitLogLog();
+
+  if (!fit || fit.n < 2) {
+    el.innerHTML = '<div class="msg error">Necesitas al menos 2 puntos válidos para hacer una predicción.</div>';
+    return;
+  }
+
+  const aVal = parseFloat(document.getElementById('pred-a').value);
+  if (isNaN(aVal) || aVal <= 0) {
+    el.innerHTML = '<div class="msg error">Introduce un valor de a mayor que cero.</div>';
+    return;
+  }
+
+  const logT = fit.slope * Math.log10(aVal) + fit.intercept;
+  const tPred = 10 ** logT;
+  const ds = DATASETS[currentDataset];
+
+  el.innerHTML = `<div class="pred-result">
+    Si a = ${aVal} ${ds.aUnit},<br>
+    entonces T ≈ <strong>${tPred.toFixed(4)} ${ds.tUnit}</strong>
+  </div>`;
+}
+
+// ============================================================
+// UTILIDADES SVG
+// ============================================================
+function addLine(svg, x1, y1, x2, y2, stroke, width) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  el.setAttribute('x1', x1); el.setAttribute('y1', y1);
+  el.setAttribute('x2', x2); el.setAttribute('y2', y2);
+  el.setAttribute('stroke', stroke);
+  el.setAttribute('stroke-width', width);
+  svg.appendChild(el);
+}
+
+function addCircle(svg, cx, cy, r, fill) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  el.setAttribute('cx', cx); el.setAttribute('cy', cy);
+  el.setAttribute('r', r); el.setAttribute('fill', fill);
+  svg.appendChild(el);
+}
+
+function addText(svg, x, y, text, anchor, fill, size, rotate) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  el.setAttribute('x', x); el.setAttribute('y', y);
+  el.setAttribute('text-anchor', anchor || 'start');
+  el.setAttribute('fill', fill || '#333');
+  el.setAttribute('font-size', size || '12px');
+  el.setAttribute('font-family', 'system-ui, sans-serif');
+  if (rotate) el.setAttribute('transform', `rotate(${rotate}, ${x}, ${y})`);
+  el.textContent = text;
+  svg.appendChild(el);
+}
+
+function fmtNum(v) {
+  if (Math.abs(v) >= 1000) return v.toExponential(1);
+  if (Math.abs(v) >= 1) return v.toFixed(1);
+  return v.toFixed(3);
+}
+
+// ============================================================
+// INICIAR
+// ============================================================
+loadDataset('solar');
+</script>
+</body>
+</html>
